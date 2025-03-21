@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Selection Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: black;
+            color: white;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            width: 80%;
+            margin: auto;
+            background-color: white;
+            padding: 20px;
+            align-items: center;
+        }
+        .left-panel {
+            width: 400px;
+            background-color: red;
+            padding: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .right-panel {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        select, button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .right-panel img {
+            max-width: 100%;
+            height: auto;
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>CAR SELECTION TOOL</h1>
+    <div class="container">
+        <div class="left-panel">
+            <select id="brand" onchange="updateBrand()">
+                <option value="" disabled selected>Select Brand</option>
+                <option value="honda">HONDA</option>
+                <option value="toyota">TOYOTA</option>
+            </select>
+            <select id="model" onchange="updateModel()" disabled>
+                <option value="" disabled selected>Select Variant</option>
+            </select>
+            <select id="color" onchange="updateImage()" disabled>
+                <option value="" disabled selected>Select Color</option>
+            </select>
+            <select id="quantity" onchange="updatePrice()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
+            <p>PRICE:</p>
+            <p class="price" id="price">0</p>
+            <button onclick="printReceipt()">PRINT RECEIPT</button>
+        </div>
+        <div class="right-panel">
+            <img id="carImage" src="https://www.remserv.com.au/sites/default/files/styles/vehicle_offer_detail/public/media/image/silhouettes_car_3.png?itok=Nm04vHZa" alt="Default Car Image">
+        </div>
+    </div>
+
+    <script>
+        const brandLogos = {
+            honda: "https://images.seeklogo.com/logo-png/28/1/honda-silver-logo-png_seeklogo-289413.png",
+            toyota: "https://1000logos.net/wp-content/uploads/2018/02/Toyota-logo.png"
+        };
+
+        const modelLogos = {
+            honda: {
+                jazz: "https://cdn.freelogovectors.net/wp-content/uploads/2016/12/honda-jazz-logo.png",
+                city: "https://www.hondacarindia.com/_next/image?url=https%3A%2F%2Fwww.hondacarindia.com%2Fweb-data%2Fmodels%2F2023%2Fcity5thGen%2FLogo%2FLogo_City_White_Background.png&w=3840&q=75",
+                freed: "https://catalogphoto.goo-net.com/carphoto/10202030_201110jii.jpg",
+                odyssey: "https://wieck-honda-production.s3.amazonaws.com/photos/a48cb638fbb93d938eac237c3228a11a5dad39f4/preview-928x522.jpg",
+                crv: "https://wieck-honda-production.s3.amazonaws.com/photos/79979b4bed8809443179fb0f2f6d427df5c2c764/preview-928x522.jpg",
+                civic: "https://logos-world.net/wp-content/uploads/2023/01/Honda-Civic-Logo-2005.png",
+            },
+            toyota: {
+                yaris: "data:image/png;base64,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",
+                vios: "https://toyotalucena.com/storage/app/uploads/public/60b/f4a/b66/60bf4ab661192600654141.png",
+                hilux: "https://brandlogos.net/wp-content/uploads/2013/03/hilux-auto-vector-logo.png",
+                camry: "https://cdn.freebiesupply.com/logos/large/2x/camry-logo-png-transparent.png",
+                corolla: "https://logowik.com/content/uploads/images/toyota-corolla.jpg",
+                supra: "https://global.toyota/pages/news/images/2019/01/14/2345/rendition/20190114_02_06_W610_H407.jpg",
+            }
+        };
+
+        const carData = {
+            honda: {
+                jazz: { price: 2476, colors: ["White", "Red", "Blue", "Grey", "Midnight", "Brown"]},
+                city: { price: 2510, colors: ["Black", "Grey"] },
+                freed: { price: 2596, colors: ["White", "Black", "Red", "Green", "Grey", "Pearl", "Blue", "Twilight"]},
+                odyssey: { price: 4092, colors: ["White", "Black", "Grey", "Red", "Platinum"]},
+                crv: { price: 3662, colors: ["White", "Red", "Black", "Grey"]},
+                civic: { price: 2819, colors: ["White", "Blue", "Black", "Grey", "Cosmic", "Red"] }
+            },
+            toyota: {
+                yaris: { price: 2025, colors: ["White", "Red", "Black"]},
+                vios: { price: 1400, colors: ["Red", "Silver", "Blue", "Grey", "Brown", "White"] },
+                hilux: {price: 1667, colors: ["Black", "Grey", "Red", "Blue", "White"]},
+                camry: { price: 3488, colors: ["Black", "Burning", "Brown", "White", "Red", "Silver"]},
+                corolla: { price: 2600, colors: ["Black", "Brown", "Grey", "Red", "White"] },
+                supra: { price: 2998, colors: ["Blue", "Grey", "Yellow", "Red", "White"]},
+            }
+        };
+
+        const carImages = {
+            honda: {
+                jazz:{
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/2/18/honda-jazz-color-172426.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/2/18/honda-jazz-color-699261.jpg",
+                    Blue: "https://imgcdn.oto.com.sg/large/gallery/color/2/18/honda-jazz-color-692347.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/2/18/honda-jazz-color-709318.jpg",
+                    Midnight: "https://imgcdn.oto.com.sg/large/gallery/color/2/18/honda-jazz-color-584995.jpg",
+                    Brown: "https://imgcdn.oto.com.sg/large/gallery/color/2/18/honda-jazz-color-826733.jpg"
+                },
+                city: {
+                    Black: "https://imgcdn.oto.com.sg/large/gallery/color/2/25/honda-city-color-873459.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/2/25/honda-city-color-189395.jpg"
+                },
+                freed: {
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/2/344/honda-freed-color-473714.jpg",
+                    Black: "https://imgcdn.oto.com.sg/large/gallery/color/2/344/honda-freed-color-164398.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/2/344/honda-freed-color-817618.jpg",
+                    Green: "https://imgcdn.oto.com.sg/large/gallery/color/2/344/honda-freed-color-122820.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/2/344/honda-freed-color-985524.jpg",
+                    Pearl: "https://imgcdn.oto.com.sg/large/gallery/color/2/344/honda-freed-color-162951.jpg",
+                    Blue: "https://imgcdn.oto.com.sg/large/gallery/color/2/344/honda-freed-color-472158.jpg",
+                    Twilight: "https://imgcdn.oto.com.sg/large/gallery/color/2/344/honda-freed-color-930779.jpg"
+                },
+                odyssey: {
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/2/21/honda-odyssey-color-265185.jpg",
+                    Black: "https://imgcdn.oto.com.sg/large/gallery/color/2/21/honda-odyssey-color-375277.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/2/21/honda-odyssey-color-154077.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/2/21/honda-odyssey-color-131067.jpg",
+                    Platinum: "https://imgcdn.oto.com.sg/large/gallery/color/2/21/honda-odyssey-color-114910.jpg"
+                },
+                crv: {
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/2/22/honda-cr-v-color-866107.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/2/22/honda-cr-v-color-825903.jpg",
+                    Black: "https://imgcdn.oto.com.sg/large/gallery/color/2/22/honda-cr-v-color-790605.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/2/22/honda-cr-v-color-767400.jpg"
+                },
+                civic: {
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/2/24/honda-civic-color-210620.jpg",
+                    Blue: "https://imgcdn.oto.com.sg/large/gallery/color/2/24/honda-civic-color-230235.jpg",
+                    Black: "https://imgcdn.oto.com.sg/large/gallery/color/2/24/honda-civic-color-145842.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/2/24/honda-civic-color-761194.jpg",
+                    Cosmic: "https://imgcdn.oto.com.sg/large/gallery/color/2/24/honda-civic-color-365042.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/2/24/honda-civic-color-905427.jpg"
+                }
+            },
+            toyota:{
+                yaris: {
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/1/282/toyota-gr-yaris-color-735785.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/1/282/toyota-gr-yaris-color-415640.jpg",
+                    Black: "https://imgcdn.oto.com.sg/large/gallery/color/1/282/toyota-gr-yaris-color-244897.jpg"
+                },
+                vios: {
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/1/15/toyota-vios-color-426310.jpg",
+                    Silver: "https://imgcdn.oto.com.sg/large/gallery/color/1/15/toyota-vios-color-241746.jpg",
+                    Blue: "https://imgcdn.oto.com.sg/large/gallery/color/1/15/toyota-vios-color-668379.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/1/15/toyota-vios-color-458150.jpg",
+                    Brown: "https://imgcdn.oto.com.sg/large/gallery/color/1/15/toyota-vios-color-186173.jpg",
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/1/15/toyota-vios-color-323199.jpg"
+                },
+                hilux:{
+                    Black: "https://imgcdn.oto.com.sg/large/gallery/color/1/3/toyota-hilux-color-920479.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/1/3/toyota-hilux-color-411494.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/1/3/toyota-hilux-color-133981.jpg",
+                    Blue: "https://imgcdn.oto.com.sg/large/gallery/color/1/3/toyota-hilux-color-274646.jpg",
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/1/3/toyota-hilux-color-150964.jpg"
+                },
+                camry: {
+                    Black: "https://imgcdn.oto.com.sg/large/gallery/color/1/16/toyota-camry-color-139057.jpg",
+                    Burning: "https://imgcdn.oto.com.sg/large/gallery/color/1/16/toyota-camry-color-704313.jpg",
+                    Brown: "https://imgcdn.oto.com.sg/large/gallery/color/1/16/toyota-camry-color-158172.jpg",
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/1/16/toyota-camry-color-458863.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/1/16/toyota-camry-color-662642.jpg",
+                    Silver: "https://imgcdn.oto.com.sg/large/gallery/color/1/16/toyota-camry-color-262053.jpg"
+                },
+                corolla: {
+                    Black: "https://imgcdn.oto.com.sg/large/gallery/color/1/12/toyota-corolla-altis-color-267432.jpg",
+                    Brown: "https://imgcdn.oto.com.sg/large/gallery/color/1/12/toyota-corolla-altis-color-811452.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/1/12/toyota-corolla-altis-color-533321.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/1/12/toyota-corolla-altis-color-470899.jpg",
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/1/12/toyota-corolla-altis-color-603839.jpg"
+                },
+                supra: {
+                    Blue: "https://imgcdn.oto.com.sg/large/gallery/color/1/10/toyota-supra-color-911495.jpg",
+                    Grey: "https://imgcdn.oto.com.sg/large/gallery/color/1/10/toyota-supra-color-801073.jpg",
+                    Yellow: "https://imgcdn.oto.com.sg/large/gallery/color/1/10/toyota-supra-color-125565.jpg",
+                    Red: "https://imgcdn.oto.com.sg/large/gallery/color/1/10/toyota-supra-color-140777.jpg",
+                    White: "https://imgcdn.oto.com.sg/large/gallery/color/1/10/toyota-supra-color-714171.jpg"
+                }
+            }
+        };
+
+        function updateBrand() {
+            let brand = document.getElementById("brand").value;
+            let modelDropdown = document.getElementById("model");
+            let colorDropdown = document.getElementById("color");
+            let image = document.getElementById("carImage");
+
+            modelDropdown.innerHTML = `<option value="" disabled selected>Select Variant</option>`;
+            colorDropdown.innerHTML = `<option value="" disabled selected>Select Color</option>`;
+            colorDropdown.disabled = true;
+            modelDropdown.disabled = false;
+
+            image.src = brandLogos[brand] || resetImage();
+
+            if (brand in carData) {
+                Object.keys(carData[brand]).forEach(model => {
+                    modelDropdown.innerHTML += `<option value="${model}">${model.toUpperCase()}</option>`;
+                });
+            }
+            updatePrice();
+        }
+
+        function updateModel() {
+            let brand = document.getElementById("brand").value;
+            let model = document.getElementById("model").value;
+            let colorDropdown = document.getElementById("color");
+            let image = document.getElementById("carImage");
+
+            colorDropdown.innerHTML = `<option value="" disabled selected>Select Color</option>`;
+            colorDropdown.disabled = false;
+
+            image.src = modelLogos[brand]?.[model] || brandLogos[brand] || resetImage();
+
+            if (brand in carData && model in carData[brand]) {
+                carData[brand][model].colors.forEach(color => {
+                    colorDropdown.innerHTML += `<option value="${color}">${color}</option>`;
+                });
+            }
+
+            updatePrice();
+        }
+
+        function updatePrice() {
+        let brand = document.getElementById("brand").value;
+        let model = document.getElementById("model").value;
+        let quantity = parseInt(document.getElementById("quantity").value);
+        let priceElement = document.getElementById("price");
+
+        if (!brand || !model) {
+            priceElement.innerText = "0";
+            return;
+        }
+
+        let pricePerUnit = carData[brand][model]?.price || 0;
+        let totalPrice = pricePerUnit * quantity;
+
+        priceElement.innerText = totalPrice;
+        }
+
+        function updateImage() {
+            let brand = document.getElementById("brand").value;
+            let model = document.getElementById("model").value;
+            let color = document.getElementById("color").value;
+            let image = document.getElementById("carImage");
+
+            image.src = carImages[brand]?.[model]?.[color] || modelLogos[brand]?.[model] || brandLogos[brand] || resetImage();
+        }
+
+        function resetImage() {
+            return "https://www.remserv.com.au/sites/default/files/styles/vehicle_offer_detail/public/media/image/silhouettes_car_3.png?itok=Nm04vHZa";
+        }
+
+        function printReceipt() {
+            let brand = document.getElementById("brand").value;
+            let model = document.getElementById("model").value;
+            let color = document.getElementById("color").value;
+            let quantity = document.getElementById("quantity").value;
+            let price = document.getElementById("price").innerText;
+
+            alert(`Brand: ${brand}\nModel: ${model}\nColor: ${color}\nQuantity: ${quantity}\nTotal Price: ${price}`);
+        }
+    </script>
+</body>
+</html>
